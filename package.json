@@ -1,0 +1,28 @@
+{
+  "name": "mfa-physical-token-simulator",
+  "version": "1.0.0",
+  "description": "Cloud-Connected Multi-Factor Authentication (MFA) Hardware Token Simulator with ESP32, OLED Display, AWS IoT Core, and AWS Lambda verification engine.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node aws/lambda/test_verify.js"
+  },
+  "keywords": [
+    "mfa",
+    "esp32",
+    "aws-iot-core",
+    "aws-lambda",
+    "oled-display",
+    "totp",
+    "cloud-computing",
+    "hardware-token",
+    "security"
+  ],
+  "author": "Purna Chandar Reddy",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}

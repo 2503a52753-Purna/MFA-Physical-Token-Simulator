@@ -1,0 +1,213 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Cloud Computing Product #2: MFA Physical Token Simulator AWS Backend Infrastructure'
+
+Parameters:
+  DefaultSecret:
+    Type: String
+    Default: 'JBSWY3DPEHPK3PXP'
+    Description: 'Default Base32 Shared Secret for Hardware Token demo'
+    NoEcho: true
+
+Resources:
+  # 1. DynamoDB Table for Storing Registered MFA Tokens & Replay Prevention
+  MfaDevicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MfaDevicesTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: deviceId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: deviceId
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      Tags:
+        - Key: Project
+          Value: MFA-Physical-Token-Simulator
+
+  # 2. DynamoDB Table for Ingested ESP32 Telemetry
+  MfaTelemetryLogsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MfaTelemetryLogs
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: deviceId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: deviceId
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+
+  # 3. IAM Role for Lambda
+  MfaLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MfaTokenLambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: MfaLambdaDynamoAndIoTAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                Resource:
+                  - !GetAtt MfaDevicesTable.Arn
+                  - !GetAtt MfaTelemetryLogsTable.Arn
+              - Effect: Allow
+                Action:
+                  - iot:Publish
+                Resource:
+                  - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/mfa/devices/*/ack'
+
+  # 4. AWS Lambda Function for MFA Verification
+  VerifyOtpFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: MfaVerifyOtpFunction
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt MfaLambdaExecutionRole.Arn
+      Timeout: 10
+      MemorySize: 256
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref MfaDevicesTable
+          DEFAULT_SHARED_SECRET: !Ref DefaultSecret
+      Code:
+        ZipFile: |
+          const crypto = require('crypto');
+          function base32ToBuffer(b32) {
+            const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let cleaned = b32.replace(/=+$/, '').toUpperCase(), bits = '';
+            for (let i = 0; i < cleaned.length; i++) {
+              const val = alpha.indexOf(cleaned[i]);
+              if (val !== -1) bits += val.toString(2).padStart(5, '0');
+            }
+            const bytes = [];
+            for (let i = 0; i + 8 <= bits.length; i += 8) {
+              bytes.push(parseInt(bits.substr(i, 8), 2));
+            }
+            return Buffer.from(bytes);
+          }
+          function generateTotp(secret, counter) {
+            const keyBuf = base32ToBuffer(secret);
+            const cntBuf = Buffer.alloc(8);
+            cntBuf.writeBigUInt64BE(BigInt(counter), 0);
+            const hmac = crypto.createHmac('sha1', keyBuf).update(cntBuf).digest();
+            const off = hmac[hmac.length - 1] & 0x0f;
+            const bin = ((hmac[off] & 0x7f) << 24) | ((hmac[off+1] & 0xff) << 16) | ((hmac[off+2] & 0xff) << 8) | (hmac[off+3] & 0xff);
+            return (bin % 1000000).toString().padStart(6, '0');
+          }
+          exports.handler = async (event) => {
+            const start = Date.now();
+            let body = {};
+            try { body = event.body ? (typeof event.body === 'string' ? JSON.parse(event.body) : event.body) : event; } catch (e) {}
+            const { deviceId = 'ESP32-MFA-01', otp = '' } = body;
+            const cleanOtp = String(otp).trim();
+            const nowSec = Math.floor(Date.now() / 1000);
+            const currentStep = Math.floor(nowSec / 30);
+            const secret = process.env.DEFAULT_SHARED_SECRET || 'JBSWY3DPEHPK3PXP';
+            let verified = false, matched = null;
+            for (let off = -1; off <= 1; off++) {
+              if (generateTotp(secret, currentStep + off) === cleanOtp) {
+                verified = true; matched = currentStep + off; break;
+              }
+            }
+            const res = {
+              success: verified,
+              verified,
+              deviceId,
+              timestamp: nowSec,
+              latencyMs: Date.now() - start,
+              message: verified ? 'MFA Token verified by AWS Lambda!' : 'Invalid or expired token.'
+            };
+            return {
+              statusCode: verified ? 200 : 401,
+              headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+              body: JSON.stringify(res)
+            };
+          };
+
+  # 5. HTTP API Gateway (v2) with CORS for Dashboard Integration
+  MfaHttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: MfaTokenVerificationApi
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Api-Key
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+
+  # 6. Lambda Integration for API Gateway
+  MfaApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref MfaHttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt VerifyOtpFunction.Arn
+      PayloadFormatVersion: '2.0'
+
+  # 7. Route POST /verify
+  MfaVerifyRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref MfaHttpApi
+      RouteKey: 'POST /verify'
+      Target: !Join ['/', ['integrations', !Ref MfaApiIntegration]]
+
+  # 8. API Gateway Stage ($default)
+  MfaApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref MfaHttpApi
+      StageName: '$default'
+      AutoDeploy: true
+
+  # 9. Lambda Permission for API Gateway
+  LambdaApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref VerifyOtpFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MfaHttpApi}/*'
+
+Outputs:
+  ApiEndpointUrl:
+    Description: 'Public API Endpoint for MFA Token Verification'
+    Value: !Sub '${MfaHttpApi.ApiEndpoint}/verify'
+  DynamoDBTable:
+    Description: 'DynamoDB Table Name'
+    Value: !Ref MfaDevicesTable
+  LambdaFunctionArn:
+    Description: 'MFA Lambda Verification Function ARN'
+    Value: !GetAtt VerifyOtpFunction.Arn

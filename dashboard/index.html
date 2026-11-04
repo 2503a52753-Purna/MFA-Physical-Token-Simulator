@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MFA Physical Token Simulator | Cloud Computing Product #2</title>
+  <meta name="description" content="ESP32 MFA Physical Token Simulator connected to AWS IoT Core and AWS Lambda Verification Engine.">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="css/styles.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            oled: '#00f3ff',
+            aws: '#ff9900',
+            darkBg: '#090d16',
+            cardBg: '#111827'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <svg class="w-6 h-6 text-slate-950 font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-lg text-white tracking-tight">MFA Physical Token Simulator</h1>
+            <span class="text-[10px] font-mono-code font-bold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">AWS IoT + Lambda</span>
+          </div>
+          <p class="text-xs text-slate-400">Cloud Computing 2nd Product • ESP32 • OLED • Cryptographic TOTP</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Cloud Mode Badge -->
+        <div id="status-cloud-mode" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-500/40 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span> AWS Lambda Simulator (us-east-1)
+        </div>
+
+        <!-- Settings Button -->
+        <button id="btn-open-settings" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          AWS Settings
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
+
+    <!-- Top Key Metrics Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 backdrop-blur">
+        <div class="text-xs text-slate-400 font-medium">Total OTPs Generated</div>
+        <div id="stat-generated" class="text-2xl font-bold font-mono-code text-cyan-400 mt-1">0</div>
+        <div class="text-[11px] text-slate-500 mt-1">Hardware & periodic cycles</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 backdrop-blur">
+        <div class="text-xs text-slate-400 font-medium">Cloud Verifications</div>
+        <div id="stat-verified" class="text-2xl font-bold font-mono-code text-emerald-400 mt-1">0</div>
+        <div class="text-[11px] text-slate-500 mt-1">Passed Lambda challenge</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 backdrop-blur">
+        <div class="text-xs text-slate-400 font-medium">Rejected / Expired</div>
+        <div id="stat-failed" class="text-2xl font-bold font-mono-code text-rose-400 mt-1">0</div>
+        <div class="text-[11px] text-slate-500 mt-1">Out-of-window & tamper attempts</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 backdrop-blur">
+        <div class="text-xs text-slate-400 font-medium">Avg Lambda Latency</div>
+        <div id="stat-latency" class="text-2xl font-bold font-mono-code text-amber-400 mt-1">42ms</div>
+        <div class="text-[11px] text-slate-500 mt-1">API Gateway + Execution roundtrip</div>
+      </div>
+    </div>
+
+    <!-- Center Interactive Grid: Hardware Token (Left) & Cloud Verification Terminal (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- LEFT COLUMN: Physical Hardware Token Simulator (5 Cols) -->
+      <div class="lg:col-span-5 flex flex-col gap-6">
+
+        <!-- ESP32 Device Enclosure -->
+        <div class="rounded-2xl border-2 border-slate-700 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 p-6 shadow-2xl relative overflow-hidden">
+          <!-- Decorative Circuit Board Aesthetics -->
+          <div class="absolute top-2 right-4 text-[10px] font-mono-code text-slate-600 font-bold tracking-widest">ESP32-WROOM-32</div>
+          <div class="absolute bottom-2 left-4 text-[9px] font-mono-code text-slate-600">REV 2.4 • I2C: 0x3C • GPIO4 PULLUP</div>
+
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-mono-code text-cyan-400 font-semibold flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+              PHYSICAL TOKEN HARDWARE
+            </span>
+            <!-- Board LEDs -->
+            <div class="flex items-center gap-3 bg-slate-950/80 px-3 py-1.5 rounded-full border border-slate-800">
+              <div class="flex items-center gap-1"><span id="led-pwr" class="led-indicator led-red-active"></span><span class="text-[9px] text-slate-400 font-mono-code">PWR</span></div>
+              <div class="flex items-center gap-1"><span id="led-wifi" class="led-indicator led-blue-active"></span><span class="text-[9px] text-slate-400 font-mono-code">WIFI</span></div>
+              <div class="flex items-center gap-1"><span id="led-tx" class="led-indicator led-off"></span><span class="text-[9px] text-slate-400 font-mono-code">MQTT</span></div>
+              <div class="flex items-center gap-1"><span id="led-auth" class="led-indicator led-off"></span><span class="text-[9px] text-slate-400 font-mono-code">AUTH</span></div>
+            </div>
+          </div>
+
+          <!-- OLED Display (SSD1306 128x64) -->
+          <div class="oled-container p-3 mb-6">
+            <div class="text-[10px] font-mono-code text-slate-500 mb-1 flex items-center justify-between">
+              <span>SSD1306 0.96" OLED</span>
+              <span>128 x 64 px</span>
+            </div>
+            <div class="oled-screen flex items-center justify-center p-2">
+              <canvas id="oledCanvas" width="128" height="64" class="w-full h-auto aspect-[2/1] rounded shadow-inner" style="image-rendering: pixelated;"></canvas>
+            </div>
+          </div>
+
+          <!-- Physical Push Button & Controls -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-400 font-medium">Physical Push Button (GPIO 4)</span>
+              <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                <input type="checkbox" id="toggle-auto-refresh" checked class="rounded border-slate-700 text-cyan-500 focus:ring-0 bg-slate-800">
+                <span>Auto-refresh (30s)</span>
+              </label>
+            </div>
+
+            <button id="btn-generate-otp" class="tactile-button w-full py-4 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2 tracking-wide cursor-pointer">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+              PUSH BUTTON : GENERATE NEW OTP
+            </button>
+
+            <button id="btn-copy-otp" class="w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono-code transition border border-slate-700 flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+              Copy Code from OLED Display
+            </button>
+          </div>
+        </div>
+
+        <!-- Virtual Serial Monitor (UART 115200 Baud) -->
+        <div class="rounded-xl border border-slate-800 bg-slate-900/90 p-4 flex flex-col h-64 shadow-lg">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="font-mono-code text-slate-300 font-semibold">ESP32 UART Serial (115200 baud)</span>
+            </div>
+            <button id="btn-clear-console" class="text-[11px] text-slate-400 hover:text-white transition">Clear</button>
+          </div>
+          <div id="serial-monitor-log" class="flex-1 overflow-y-auto space-y-1 pr-1 font-mono-code text-xs"></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Enterprise Cloud MFA Verification Terminal (7 Cols) -->
+      <div class="lg:col-span-7 flex flex-col gap-6">
+
+        <!-- Verification Portal Card -->
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 backdrop-blur shadow-xl">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+            <div>
+              <h2 class="text-base font-bold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                Cloud Vault MFA Verification Terminal
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">Test real-world authentication against the AWS Lambda verification engine</p>
+            </div>
+            <span class="px-2.5 py-1 rounded bg-slate-800 text-[11px] font-mono-code text-slate-300 border border-slate-700">AWS Lambda POST /verify</span>
+          </div>
+
+          <!-- Simulated Login Form -->
+          <div class="mt-6 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">User Account / Identity</label>
+                <div class="px-3 py-2 rounded-lg bg-slate-950/80 border border-slate-800 text-xs font-mono-code text-slate-300">admin@cloudenterprise.io</div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Associated Token ID</label>
+                <div class="px-3 py-2 rounded-lg bg-slate-950/80 border border-slate-800 text-xs font-mono-code text-cyan-400 font-bold">ESP32-MFA-01</div>
+              </div>
+            </div>
+
+            <!-- OTP Input Box -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">
+                Enter 6-Digit OTP from Physical Token OLED Display
+              </label>
+              <div class="relative">
+                <input
+                  type="text"
+                  id="input-otp"
+                  maxlength="6"
+                  placeholder="000000"
+                  autocomplete="off"
+                  class="w-full bg-slate-950 border-2 border-slate-700 focus:border-cyan-500 rounded-xl px-4 py-3 text-center text-2xl font-mono-code font-bold tracking-[0.4em] text-cyan-400 focus:outline-none transition shadow-inner"
+                >
+              </div>
+            </div>
+
+            <!-- Verify Action Button -->
+            <button
+              id="btn-verify-otp"
+              class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm tracking-wide transition shadow-lg shadow-cyan-500/25 flex items-center justify-center cursor-pointer"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+              Verify with AWS Lambda
+            </button>
+
+            <!-- Dynamic Verification Result Banner Container -->
+            <div id="verification-result-banner" class="hidden"></div>
+          </div>
+        </div>
+
+        <!-- AWS Cloud Architecture Pipeline & Telemetry -->
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 backdrop-blur shadow-xl space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"></path></svg>
+              AWS Cloud Architecture & IoT Core Stream
+            </h3>
+            <span class="text-xs text-slate-400 font-mono-code">TLS 1.2 • Port 8883 • QoS 1</span>
+          </div>
+
+          <!-- Visual Pipeline Stages -->
+          <div class="grid grid-cols-5 gap-2 text-center text-[10px] font-mono-code">
+            <div class="p-2 rounded-lg bg-slate-950 border border-slate-800 text-cyan-400">
+              <div class="font-bold">1. ESP32</div>
+              <div class="text-slate-500">OLED + Button</div>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950 border border-slate-800 text-amber-400">
+              <div class="font-bold">2. IoT Core</div>
+              <div class="text-slate-500">MQTT Broker</div>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950 border border-slate-800 text-orange-400">
+              <div class="font-bold">3. Topic Rule</div>
+              <div class="text-slate-500">SQL Filter</div>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950 border border-slate-800 text-purple-400">
+              <div class="font-bold">4. Lambda</div>
+              <div class="text-slate-500">Verification</div>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950 border border-slate-800 text-blue-400">
+              <div class="font-bold">5. DynamoDB</div>
+              <div class="text-slate-500">Replay Store</div>
+            </div>
+          </div>
+
+          <!-- MQTT Real-Time Stream Inspector -->
+          <div>
+            <div class="text-xs text-slate-400 font-medium mb-1.5 flex items-center justify-between">
+              <span>Live MQTT Packet Stream</span>
+              <span class="text-[10px] text-slate-500 font-mono-code">Topic: mfa/devices/+/otp | ack</span>
+            </div>
+            <div id="mqtt-packet-stream" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+          </div>
+
+          <!-- Telemetry Latency Chart -->
+          <div class="pt-2">
+            <div class="text-xs text-slate-400 font-medium mb-1 flex items-center justify-between">
+              <span>Lambda Roundtrip Latency (ms)</span>
+              <span class="text-[10px] text-slate-500 font-mono-code">Live execution telemetry</span>
+            </div>
+            <div class="h-28 w-full">
+              <canvas id="chart-telemetry"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Full Width Section: Cryptographic RFC 6238 Inspector & Hardware Wiring -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+      <!-- Crypto Deep-Dive Card -->
+      <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 backdrop-blur shadow-xl space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11a7.978 7.978 0 002.04 5.34M12 11a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            RFC 6238 Cryptographic Algorithm Inspector
+          </h3>
+          <span class="text-[10px] font-mono-code text-cyan-400 px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800">HMAC-SHA1</span>
+        </div>
+
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Zero-trust security: The shared secret key <span class="text-cyan-400 font-mono-code">K</span> is provisioned onto the ESP32 and stored in the cloud. It is <strong class="text-white">never transmitted over the air</strong>. Both ESP32 and AWS compute the dynamic hash synchronously.
+        </p>
+
+        <div class="space-y-2 font-mono-code text-xs">
+          <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
+            <span class="text-slate-400">1. Shared Secret (K):</span>
+            <span id="crypto-secret" class="text-cyan-400 font-bold">JBSWY3DPEHPK3PXP</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
+            <span class="text-slate-400">2. Unix Epoch (T):</span>
+            <span id="crypto-timestamp" class="text-amber-400">...</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
+            <span class="text-slate-400">3. Time Step (C = floor(T/30)):</span>
+            <span id="crypto-step" class="text-purple-400">...</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+            <div class="text-slate-400 mb-1">4. HMAC-SHA1 Hash (20 bytes):</div>
+            <div id="crypto-hmac" class="text-[11px] text-emerald-400 break-all bg-black/40 p-1.5 rounded">...</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
+            <span class="text-slate-400">5. Dynamic Truncation:</span>
+            <span id="crypto-truncation" class="text-slate-300 text-[11px]">...</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-slate-950 border border-cyan-800/60 flex items-center justify-between">
+            <span class="text-cyan-300 font-bold">6. Resulting 6-Digit OTP:</span>
+            <span id="crypto-otp" class="text-cyan-400 font-extrabold text-lg">------</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hardware Pinout & Circuit Wiring Card -->
+      <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 backdrop-blur shadow-xl space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            Circuit Wiring Pinout & Wokwi Simulation
+          </h3>
+          <span class="text-[10px] font-mono-code text-emerald-400 px-2 py-0.5 rounded bg-emerald-950 border border-emerald-800">Ready to Wire</span>
+        </div>
+
+        <p class="text-xs text-slate-400">
+          Connect your physical ESP32 and 0.96" I2C OLED display according to the pinout below:
+        </p>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono-code">
+            <thead class="bg-slate-950 text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="p-2">Component</th>
+                <th class="p-2">Component Pin</th>
+                <th class="p-2">ESP32 Pin</th>
+                <th class="p-2">Description</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60 text-slate-300">
+              <tr>
+                <td class="p-2 text-cyan-400 font-bold">OLED (SSD1306)</td>
+                <td class="p-2">SDA</td>
+                <td class="p-2 text-amber-400">GPIO 21</td>
+                <td class="p-2 text-slate-400">I2C Serial Data</td>
+              </tr>
+              <tr>
+                <td class="p-2 text-cyan-400 font-bold">OLED (SSD1306)</td>
+                <td class="p-2">SCL</td>
+                <td class="p-2 text-amber-400">GPIO 22</td>
+                <td class="p-2 text-slate-400">I2C Serial Clock</td>
+              </tr>
+              <tr>
+                <td class="p-2 text-cyan-400 font-bold">OLED (SSD1306)</td>
+                <td class="p-2">VCC / GND</td>
+                <td class="p-2 text-rose-400">3V3 / GND</td>
+                <td class="p-2 text-slate-400">Power Supply (3.3V)</td>
+              </tr>
+              <tr>
+                <td class="p-2 text-emerald-400 font-bold">Tactile Button</td>
+                <td class="p-2">Terminal 1</td>
+                <td class="p-2 text-emerald-400">GPIO 4</td>
+                <td class="p-2 text-slate-400">Active LOW (Internal Pullup)</td>
+              </tr>
+              <tr>
+                <td class="p-2 text-emerald-400 font-bold">Tactile Button</td>
+                <td class="p-2">Terminal 2</td>
+                <td class="p-2 text-slate-400">GND</td>
+                <td class="p-2 text-slate-400">Ground Reference</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-white">Browser Wokwi Simulator</div>
+            <div class="text-[11px] text-slate-400">Test the complete circuit & firmware online with 0 hardware!</div>
+          </div>
+          <a
+            href="https://wokwi.com/projects/new/esp32"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition"
+          >
+            Open in Wokwi ↗
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+    <p>Cloud Computing 2nd Product • MFA Physical Token Simulator • Developed by Purna Chandar Reddy</p>
+    <p class="mt-1">Powered by ESP32, FreeRTOS, AWS IoT Core, and AWS Lambda</p>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- AWS Configuration Modal -->
+  <div id="modal-settings" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6 max-w-lg w-full shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"></path></svg>
+          AWS Cloud Integration Settings
+        </h3>
+        <button id="btn-close-settings" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+
+      <form id="form-settings" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">AWS Region</label>
+          <select id="setting-region" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono-code text-white">
+            <option value="us-east-1">us-east-1 (N. Virginia)</option>
+            <option value="us-west-2">us-west-2 (Oregon)</option>
+            <option value="ap-south-1">ap-south-1 (Mumbai)</option>
+            <option value="eu-west-1">eu-west-1 (Ireland)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">
+            AWS API Gateway Endpoint URL (POST /verify)
+          </label>
+          <input
+            type="url"
+            id="setting-api-endpoint"
+            placeholder="https://abc123xyz.execute-api.us-east-1.amazonaws.com/verify"
+            class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-lg px-3 py-2 text-xs font-mono-code text-slate-200"
+          >
+          <p class="text-[11px] text-slate-500 mt-1">Leave blank to use the built-in AWS Lambda Execution Simulator.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">AWS IoT Core Data Endpoint</label>
+          <input
+            type="text"
+            id="setting-iot-endpoint"
+            placeholder="a1b2c3d4e5f6g7-ats.iot.us-east-1.amazonaws.com"
+            class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-lg px-3 py-2 text-xs font-mono-code text-slate-200"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Shared Secret Key (Base32)</label>
+          <input
+            type="text"
+            id="setting-secret"
+            placeholder="JBSWY3DPEHPK3PXP"
+            class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-lg px-3 py-2 text-xs font-mono-code text-cyan-400 font-bold"
+          >
+          <p class="text-[11px] text-slate-500 mt-1">Both the ESP32 token and AWS Lambda share this secret key.</p>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="document.getElementById('modal-settings').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs">Save & Apply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/totp-engine.js"></script>
+  <script src="js/oled-emulator.js"></script>
+  <script src="js/aws-client.js"></script>
+  <script src="js/ui-components.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

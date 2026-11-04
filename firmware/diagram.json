@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "author": "Purna Chandar Reddy",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "board-ssd1306",
+      "id": "oled",
+      "top": -120,
+      "left": 180,
+      "attrs": { "i2cAddress": "0x3c" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 140,
+      "left": 200,
+      "attrs": { "color": "green", "label": "GENERATE OTP" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 140,
+      "left": 130,
+      "attrs": { "color": "blue", "label": "STATUS" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 200,
+      "left": 130,
+      "attrs": { "value": "220" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp:GND.1", "oled:GND", "black", [ "v0" ] ],
+    [ "esp:3V3", "oled:VCC", "red", [ "v0" ] ],
+    [ "esp:22", "oled:SCL", "yellow", [ "h20", "v-80" ] ],
+    [ "esp:21", "oled:SDA", "blue", [ "h30", "v-60" ] ],
+    [ "esp:4", "btn1:1.l", "green", [ "h10", "v40" ] ],
+    [ "esp:GND.2", "btn1:2.l", "black", [ "h20", "v30" ] ],
+    [ "esp:2", "led1:A", "purple", [ "h15", "v50" ] ],
+    [ "led1:K", "r1:1", "black", [ "v10" ] ],
+    [ "r1:2", "esp:GND.1", "black", [ "v10", "h-50" ] ]
+  ],
+  "dependencies": {}
+}
