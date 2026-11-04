@@ -1,5 +1,6 @@
 # MFA Physical Token Simulator (Cloud Computing Product #2)
 
+[![Live Demo: Online 24/7](https://img.shields.io/badge/Live%20Demo-Online%2024%2F7-brightgreen?style=for-the-badge&logo=githubpages&logoColor=white)](https://2503a52753-purna.github.io/MFA-Physical-Token-Simulator/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Hardware: ESP32](https://img.shields.io/badge/Hardware-ESP32-red.svg)](https://www.espressif.com/)
 [![Display: SSD1306 OLED](https://img.shields.io/badge/Display-SSD1306%20OLED-blue.svg)](https://adafruit.com)
@@ -7,6 +8,8 @@
 [![Compute: AWS Lambda](https://img.shields.io/badge/AWS-Lambda%20Verification-orange.svg)](https://aws.amazon.com/lambda/)
 [![Standard: RFC 6238 TOTP](https://img.shields.io/badge/Standard-RFC%206238%20TOTP-green.svg)](https://datatracker.ietf.org/doc/html/rfc6238)
 
+> 🌐 **Live 24/7 Web Dashboard**: **[https://2503a52753-purna.github.io/MFA-Physical-Token-Simulator/](https://2503a52753-purna.github.io/MFA-Physical-Token-Simulator/)**
+> 
 > **Cloud Computing Product #2**: An enterprise-grade Multi-Factor Authentication (MFA) hardware token simulator. A physical push-button generates a cryptographically synchronized dynamic OTP displayed on an SSD1306 OLED screen; an AWS Lambda function verifies it against the hardware secret with drift tolerance and replay attack protection.
 
 ---
@@ -214,3 +217,4 @@ Don't have an ESP32 on hand? Simulate the physical hardware entirely in your bro
 - **Author**: Purna Chandar Reddy
 - **Topic**: MFA Physical Token Simulator (ESP32 + OLED + AWS IoT Core + AWS Lambda)
 - **License**: MIT
+
