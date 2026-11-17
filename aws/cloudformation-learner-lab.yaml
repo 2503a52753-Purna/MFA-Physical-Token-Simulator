@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'MFA Physical Token Simulator - AWS Learner Lab CloudFormation Template (Zero IAM permission issues; uses pre-existing LabRole)'
+Description: 'MFA Physical Token Simulator - AWS Learner Lab CloudFormation Template (Hook-Compliant; uses pre-existing LabRole)'
 
 Parameters:
   DefaultSecret:
@@ -13,7 +13,6 @@ Resources:
   MfaDevicesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: MfaDevicesTable
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: deviceId
@@ -24,17 +23,11 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: expiresAt
         Enabled: true
-      Tags:
-        - Key: Project
-          Value: MFA-Physical-Token-Simulator
-        - Key: Environment
-          Value: AWS-Learner-Lab
 
   # 2. DynamoDB Table for Ingested ESP32 Telemetry
   MfaTelemetryLogsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: MfaTelemetryLogs
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: deviceId
@@ -46,17 +39,12 @@ Resources:
           KeyType: HASH
         - AttributeName: timestamp
           KeyType: RANGE
-      Tags:
-        - Key: Project
-          Value: MFA-Physical-Token-Simulator
-        - Key: Environment
-          Value: AWS-Learner-Lab
 
   # 3. AWS Lambda Function for MFA Verification (Using Learner Lab pre-existing LabRole)
   MfaVerifyOtpFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: MfaVerifyOtpFunction
+      FunctionName: !Sub 'MfaVerifyOtpFunction-${AWS::StackName}'
       Runtime: nodejs20.x
       Handler: index.handler
       Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/LabRole'
@@ -225,37 +213,11 @@ Resources:
             }
           };
 
-  # 4. Permanent AWS Lambda Function URL (Zero-configuration, permanent HTTPS endpoint with CORS)
-  MfaVerifyOtpFunctionUrl:
-    Type: AWS::Lambda::Url
-    Properties:
-      TargetFunctionArn: !Ref MfaVerifyOtpFunction
-      AuthType: NONE
-      Cors:
-        AllowOrigins:
-          - '*'
-        AllowHeaders:
-          - Content-Type
-          - Authorization
-          - X-Api-Key
-        AllowMethods:
-          - GET
-          - POST
-          - OPTIONS
-
-  FunctionUrlPublicPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref MfaVerifyOtpFunction
-      Action: lambda:InvokeFunctionUrl
-      Principal: '*'
-      FunctionUrlAuthType: NONE
-
-  # 5. HTTP API Gateway (v2) with CORS for Dashboard Integration
+  # 4. HTTP API Gateway (v2) with CORS for Dashboard Integration
   MfaHttpApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
-      Name: MfaTokenVerificationApi-LearnerLab
+      Name: !Sub 'MfaApi-${AWS::StackName}'
       ProtocolType: HTTP
       CorsConfiguration:
         AllowOrigins:
@@ -269,7 +231,7 @@ Resources:
           - POST
           - OPTIONS
 
-  # 6. Lambda Integration for API Gateway
+  # 5. Lambda Integration for API Gateway
   MfaApiIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
@@ -278,7 +240,7 @@ Resources:
       IntegrationUri: !GetAtt MfaVerifyOtpFunction.Arn
       PayloadFormatVersion: '2.0'
 
-  # 7. Route ANY /{proxy+} for full compatibility
+  # 6. Route ANY /{proxy+} for full compatibility
   MfaDefaultRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -286,7 +248,7 @@ Resources:
       RouteKey: '$default'
       Target: !Join ['/', ['integrations', !Ref MfaApiIntegration]]
 
-  # 8. API Gateway Stage ($default)
+  # 7. API Gateway Stage ($default)
   MfaApiStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
@@ -294,7 +256,7 @@ Resources:
       StageName: '$default'
       AutoDeploy: true
 
-  # 9. Lambda Permission for API Gateway
+  # 8. Lambda Permission for API Gateway
   LambdaApiPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -304,18 +266,12 @@ Resources:
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MfaHttpApi}/*'
 
 Outputs:
-  LambdaFunctionUrl:
-    Description: 'Permanent Direct AWS Lambda Function URL (Recommended - 100% permanent with CORS)'
-    Value: !GetAtt MfaVerifyOtpFunctionUrl.FunctionUrl
   ApiEndpointUrl:
     Description: 'Permanent API Gateway Endpoint URL (POST /verify)'
     Value: !Sub '${MfaHttpApi.ApiEndpoint}/verify'
   DynamoDBTable:
-    Description: 'DynamoDB Table Name'
+    Description: 'DynamoDB Table'
     Value: !Ref MfaDevicesTable
   LambdaFunctionArn:
     Description: 'MFA Lambda Verification Function ARN'
     Value: !GetAtt MfaVerifyOtpFunction.Arn
-  LearnerLabRole:
-    Description: 'IAM Role Used (Built-in to Learner Lab)'
-    Value: !Sub 'arn:aws:iam::${AWS::AccountId}:role/LabRole'
