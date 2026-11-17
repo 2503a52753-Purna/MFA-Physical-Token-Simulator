@@ -62,7 +62,19 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Handle Mock AWS Lambda API Route: POST /api/verify
+  // Handle Mock AWS Lambda API Route: GET / POST /api/verify or /verify
+  if (req.method === 'GET' && (req.url === '/api/verify' || req.url === '/verify')) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 'ONLINE',
+      connected: true,
+      service: 'AWS Lambda Mock / Local Server',
+      timestamp: Math.floor(Date.now() / 1000),
+      message: 'Local AWS Lambda verification engine is online.'
+    }));
+    return;
+  }
+
   if (req.method === 'POST' && (req.url === '/api/verify' || req.url === '/verify')) {
     let body = '';
     req.on('data', chunk => { body += chunk; });
@@ -70,6 +82,21 @@ const server = http.createServer((req, res) => {
       const startTime = Date.now();
       try {
         const payload = JSON.parse(body || '{}');
+
+        // Health-check / ping probe support
+        if (payload.action === 'ping' || payload.test === true) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            status: 'ONLINE',
+            connected: true,
+            service: 'AWS Lambda Mock / Local Server',
+            latencyMs: 15,
+            timestamp: Math.floor(Date.now() / 1000),
+            message: 'Connection verified successfully!'
+          }));
+          return;
+        }
+
         const { deviceId = 'ESP32-MFA-01', otp = '', userId = 'admin@cloudenterprise.io' } = payload;
         const cleanOtp = String(otp).trim();
 
@@ -164,3 +191,4 @@ server.listen(PORT, () => {
   console.log(` Lambda Mock Endpoint: http://localhost:${PORT}/api/verify`);
   console.log('================================================================');
 });
+

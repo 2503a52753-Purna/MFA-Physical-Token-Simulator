@@ -64,7 +64,12 @@ exports.handler = async (event) => {
   const startTime = Date.now();
   console.log('[MFA-LAMBDA] Received event:', JSON.stringify(event));
 
-  // Handle API Gateway HTTP POST or direct invocation
+  const httpMethod = (event.requestContext?.http?.method || event.httpMethod || '').toUpperCase();
+  if (httpMethod === 'OPTIONS') {
+    return buildResponse(204, '');
+  }
+
+  // Handle API Gateway HTTP POST, Lambda Function URL, or direct invocation
   let body = {};
   if (event.body) {
     try {
@@ -77,6 +82,18 @@ exports.handler = async (event) => {
     }
   } else {
     body = event;
+  }
+
+  // Health-check / ping probe support
+  if (httpMethod === 'GET' || body.action === 'ping' || body.test === true) {
+    return buildResponse(200, {
+      status: 'ONLINE',
+      connected: true,
+      service: 'AWS Lambda MFA Verification Engine',
+      region: process.env.AWS_REGION || 'us-east-1',
+      timestamp: Math.floor(Date.now() / 1000),
+      message: 'AWS Lambda verification engine is online and operational.'
+    });
   }
 
   const { deviceId = 'ESP32-MFA-01', otp, userId = 'admin@cloudenterprise.io' } = body;
@@ -215,3 +232,4 @@ function buildResponse(statusCode, body) {
     body: JSON.stringify(body)
   };
 }
+

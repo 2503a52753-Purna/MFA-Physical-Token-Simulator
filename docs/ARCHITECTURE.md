@@ -94,3 +94,4 @@ The dynamic 6-digit code is calculated using the following mathematical sequence
 
 4. **Modulo Reduction to 6 Digits**:
    $$\text{OTP} = P \pmod{10^6}$$
+

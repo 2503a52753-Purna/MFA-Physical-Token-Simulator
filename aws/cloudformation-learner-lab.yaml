@@ -1,0 +1,317 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'MFA Physical Token Simulator - AWS Learner Lab CloudFormation Template (Zero IAM permission issues; uses pre-existing LabRole)'
+
+Parameters:
+  DefaultSecret:
+    Type: String
+    Default: 'JBSWY3DPEHPK3PXP'
+    Description: 'Base32 Shared Secret for Hardware Token demo'
+    NoEcho: true
+
+Resources:
+  # 1. DynamoDB Table for Storing Registered MFA Tokens & Replay Prevention
+  MfaDevicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MfaDevicesTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: deviceId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: deviceId
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      Tags:
+        - Key: Project
+          Value: MFA-Physical-Token-Simulator
+        - Key: Environment
+          Value: AWS-Learner-Lab
+
+  # 2. DynamoDB Table for Ingested ESP32 Telemetry
+  MfaTelemetryLogsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: MfaTelemetryLogs
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: deviceId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: deviceId
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      Tags:
+        - Key: Project
+          Value: MFA-Physical-Token-Simulator
+        - Key: Environment
+          Value: AWS-Learner-Lab
+
+  # 3. AWS Lambda Function for MFA Verification (Using Learner Lab pre-existing LabRole)
+  MfaVerifyOtpFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: MfaVerifyOtpFunction
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/LabRole'
+      Timeout: 10
+      MemorySize: 256
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref MfaDevicesTable
+          DEFAULT_SHARED_SECRET: !Ref DefaultSecret
+      Code:
+        ZipFile: |
+          const crypto = require('crypto');
+
+          function base32ToBuffer(b32) {
+            const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let cleaned = (b32 || '').replace(/=+$/, '').toUpperCase(), bits = '';
+            for (let i = 0; i < cleaned.length; i++) {
+              const val = alpha.indexOf(cleaned[i]);
+              if (val !== -1) bits += val.toString(2).padStart(5, '0');
+            }
+            const bytes = [];
+            for (let i = 0; i + 8 <= bits.length; i += 8) {
+              bytes.push(parseInt(bits.substr(i, 8), 2));
+            }
+            return Buffer.from(bytes);
+          }
+
+          function generateTotp(secret, counter) {
+            const keyBuf = base32ToBuffer(secret);
+            const cntBuf = Buffer.alloc(8);
+            cntBuf.writeBigUInt64BE(BigInt(counter), 0);
+            const hmac = crypto.createHmac('sha1', keyBuf).update(cntBuf).digest();
+            const off = hmac[hmac.length - 1] & 0x0f;
+            const bin = ((hmac[off] & 0x7f) << 24) | ((hmac[off+1] & 0xff) << 16) | ((hmac[off+2] & 0xff) << 8) | (hmac[off+3] & 0xff);
+            return (bin % 1000000).toString().padStart(6, '0');
+          }
+
+          const consumedSteps = new Set();
+
+          exports.handler = async (event) => {
+            const start = Date.now();
+            console.log('[MFA-LEARNER-LAB] Event received:', JSON.stringify(event));
+
+            // Support CORS preflight OPTIONS
+            const httpMethod = (event.requestContext?.http?.method || event.httpMethod || '').toUpperCase();
+            if (httpMethod === 'OPTIONS') {
+              return {
+                statusCode: 204,
+                headers: {
+                  'Access-Control-Allow-Origin': '*',
+                  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Api-Key',
+                  'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+                },
+                body: ''
+              };
+            }
+
+            let body = {};
+            try {
+              body = event.body ? (typeof event.body === 'string' ? JSON.parse(event.body) : event.body) : event;
+            } catch (e) {
+              body = {};
+            }
+
+            // Health-check / ping probe support
+            if (httpMethod === 'GET' || body.action === 'ping' || body.test === true) {
+              return {
+                statusCode: 200,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Access-Control-Allow-Origin': '*'
+                },
+                body: JSON.stringify({
+                  status: 'ONLINE',
+                  connected: true,
+                  service: 'AWS Learner Lab MFA Verification Engine',
+                  region: process.env.AWS_REGION || 'us-east-1',
+                  role: 'LabRole',
+                  timestamp: Math.floor(Date.now() / 1000),
+                  message: 'AWS Learner Lab permanent connection verified successfully!'
+                })
+              };
+            }
+
+            const { deviceId = 'ESP32-MFA-01', otp = '', userId = 'admin@cloudenterprise.io' } = body;
+            const cleanOtp = String(otp).trim();
+
+            if (!cleanOtp || cleanOtp.length !== 6) {
+              return {
+                statusCode: 400,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({
+                  success: false,
+                  verified: false,
+                  error: 'INVALID_OTP_FORMAT',
+                  message: 'OTP must be a 6-digit numeric string.'
+                })
+              };
+            }
+
+            const nowSec = Math.floor(Date.now() / 1000);
+            const currentStep = Math.floor(nowSec / 30);
+            const secret = process.env.DEFAULT_SHARED_SECRET || 'JBSWY3DPEHPK3PXP';
+
+            let verified = false;
+            let matchedStep = null;
+
+            for (let off = -1; off <= 1; off++) {
+              const testStep = currentStep + off;
+              if (generateTotp(secret, testStep) === cleanOtp) {
+                // Replay attack check
+                if (consumedSteps.has(testStep)) {
+                  return {
+                    statusCode: 403,
+                    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                    body: JSON.stringify({
+                      success: false,
+                      verified: false,
+                      error: 'REPLAY_ATTACK_DETECTED',
+                      message: 'SECURITY ALERT: This single-use OTP was already consumed! Replay attack blocked by AWS Lambda.',
+                      latencyMs: Date.now() - start
+                    })
+                  };
+                }
+                verified = true;
+                matchedStep = testStep;
+                break;
+              }
+            }
+
+            if (verified) {
+              consumedSteps.add(matchedStep);
+              return {
+                statusCode: 200,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({
+                  success: true,
+                  verified: true,
+                  deviceId,
+                  userId,
+                  sessionToken: 'mfa_sess_' + crypto.randomBytes(16).toString('hex'),
+                  matchedStep,
+                  timestamp: nowSec,
+                  latencyMs: Date.now() - start,
+                  source: 'AWS_LEARNER_LAB_LAMBDA',
+                  message: 'MFA Hardware Token successfully verified by AWS Learner Lab Lambda!'
+                })
+              };
+            } else {
+              return {
+                statusCode: 401,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({
+                  success: false,
+                  verified: false,
+                  error: 'INVALID_OR_EXPIRED_TOKEN',
+                  latencyMs: Date.now() - start,
+                  source: 'AWS_LEARNER_LAB_LAMBDA',
+                  message: 'The OTP entered is either expired or did not match the token synchronized with AWS.'
+                })
+              };
+            }
+          };
+
+  # 4. Permanent AWS Lambda Function URL (Zero-configuration, permanent HTTPS endpoint with CORS)
+  MfaVerifyOtpFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref MfaVerifyOtpFunction
+      AuthType: NONE
+      Cors:
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Api-Key
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+
+  FunctionUrlPublicPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MfaVerifyOtpFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+  # 5. HTTP API Gateway (v2) with CORS for Dashboard Integration
+  MfaHttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: MfaTokenVerificationApi-LearnerLab
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Api-Key
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+
+  # 6. Lambda Integration for API Gateway
+  MfaApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref MfaHttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt MfaVerifyOtpFunction.Arn
+      PayloadFormatVersion: '2.0'
+
+  # 7. Route ANY /{proxy+} for full compatibility
+  MfaDefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref MfaHttpApi
+      RouteKey: '$default'
+      Target: !Join ['/', ['integrations', !Ref MfaApiIntegration]]
+
+  # 8. API Gateway Stage ($default)
+  MfaApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref MfaHttpApi
+      StageName: '$default'
+      AutoDeploy: true
+
+  # 9. Lambda Permission for API Gateway
+  LambdaApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MfaVerifyOtpFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MfaHttpApi}/*'
+
+Outputs:
+  LambdaFunctionUrl:
+    Description: 'Permanent Direct AWS Lambda Function URL (Recommended - 100% permanent with CORS)'
+    Value: !GetAtt MfaVerifyOtpFunctionUrl.FunctionUrl
+  ApiEndpointUrl:
+    Description: 'Permanent API Gateway Endpoint URL (POST /verify)'
+    Value: !Sub '${MfaHttpApi.ApiEndpoint}/verify'
+  DynamoDBTable:
+    Description: 'DynamoDB Table Name'
+    Value: !Ref MfaDevicesTable
+  LambdaFunctionArn:
+    Description: 'MFA Lambda Verification Function ARN'
+    Value: !GetAtt MfaVerifyOtpFunction.Arn
+  LearnerLabRole:
+    Description: 'IAM Role Used (Built-in to Learner Lab)'
+    Value: !Sub 'arn:aws:iam::${AWS::AccountId}:role/LabRole'

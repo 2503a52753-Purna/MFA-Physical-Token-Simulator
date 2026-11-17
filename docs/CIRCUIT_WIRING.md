@@ -54,3 +54,4 @@ This guide details the hardware assembly and wiring connections for the **MFA Ph
    - The firmware initializes `pinMode(BUTTON_PIN, INPUT_PULLUP);`. The internal ESP32 45kΩ pull-up resistor is active, eliminating the need for an external physical pull-up resistor.
    - When unpressed: GPIO 4 reads `HIGH (1)`.
    - When pressed: GPIO 4 is shorted to GND and reads `LOW (0)`.
+

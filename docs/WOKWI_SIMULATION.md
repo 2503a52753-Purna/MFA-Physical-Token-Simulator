@@ -33,3 +33,4 @@ You can simulate the entire **MFA Physical Token Simulator** hardware in your we
    - Open `dashboard/index.html` in another browser tab.
    - Type the 6-digit OTP shown on the Wokwi OLED into the dashboard's verification terminal.
    - Click **Verify with AWS Lambda** to observe real-time cloud authentication!
+

@@ -1,6 +1,6 @@
 /* Custom styling and effects for MFA Physical Token Simulator */
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   --oled-cyan: #00f3ff;
@@ -12,7 +12,7 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: #0b0f19;
+  background-color: #070b14;
   color: #e2e8f0;
 }
 
@@ -23,9 +23,9 @@ body {
 /* OLED Screen Glassmorphism & Scanlines */
 .oled-container {
   background: radial-gradient(circle at center, #071924 0%, #03080d 100%);
-  border: 4px solid #1f2937;
-  border-radius: 8px;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9), 0 0 15px rgba(0, 243, 255, 0.15);
+  border: 4px solid #1e293b;
+  border-radius: 12px;
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 243, 255, 0.18);
   position: relative;
   overflow: hidden;
 }
@@ -33,7 +33,7 @@ body {
 .oled-screen {
   background-color: var(--oled-bg);
   position: relative;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -42,7 +42,7 @@ body {
   display: block;
   position: absolute;
   top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
   z-index: 2;
   background-size: 100% 3px, 3px 100%;
   pointer-events: none;
@@ -52,7 +52,7 @@ body {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; height: 100%;
-  background: linear-gradient(rgba(0, 243, 255, 0.04), transparent);
+  background: linear-gradient(rgba(0, 243, 255, 0.05), transparent);
   pointer-events: none;
 }
 
@@ -63,25 +63,26 @@ body {
 
 .oled-border-glow {
   border-color: var(--oled-cyan);
-  box-shadow: 0 0 8px rgba(0, 243, 255, 0.5);
+  box-shadow: 0 0 12px rgba(0, 243, 255, 0.5);
 }
 
-/* Push Button 3D Effect */
+/* Push Button 3D Tactile Effect */
 .tactile-button {
-  background: linear-gradient(145deg, #10b981, #059669);
+  background: linear-gradient(145deg, #0284c7, #0369a1);
   border: none;
-  box-shadow: 0 6px 0 #047857, 0 10px 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 0 #075985, 0 10px 18px rgba(0, 0, 0, 0.5);
   transition: all 0.08s ease;
   user-select: none;
 }
 
 .tactile-button:hover {
-  background: linear-gradient(145deg, #34d399, #10b981);
+  background: linear-gradient(145deg, #38bdf8, #0284c7);
+  box-shadow: 0 6px 0 #075985, 0 12px 22px rgba(2, 132, 199, 0.4);
 }
 
 .tactile-button:active {
   transform: translateY(4px);
-  box-shadow: 0 2px 0 #047857, 0 4px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 0 #075985, 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Status LEDs */
@@ -95,27 +96,47 @@ body {
 
 .led-red-active {
   background-color: #ef4444;
-  box-shadow: 0 0 8px #ef4444, 0 0 12px #ef4444;
+  box-shadow: 0 0 8px #ef4444, 0 0 14px #ef4444;
 }
 
 .led-blue-active {
   background-color: #3b82f6;
-  box-shadow: 0 0 8px #3b82f6, 0 0 12px #3b82f6;
+  box-shadow: 0 0 8px #3b82f6, 0 0 14px #3b82f6;
 }
 
 .led-amber-active {
   background-color: #f59e0b;
-  box-shadow: 0 0 8px #f59e0b, 0 0 12px #f59e0b;
+  box-shadow: 0 0 8px #f59e0b, 0 0 14px #f59e0b;
 }
 
 .led-green-active {
   background-color: #10b981;
-  box-shadow: 0 0 8px #10b981, 0 0 12px #10b981;
+  box-shadow: 0 0 8px #10b981, 0 0 14px #10b981;
 }
 
 .led-off {
-  background-color: #374151;
+  background-color: #334155;
   box-shadow: none;
+}
+
+/* Step Card Numbers */
+.step-bubble {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* Tab button active state */
+.tab-btn.active {
+  background: #1e293b;
+  color: #38bdf8;
+  border-color: #38bdf8;
+  font-weight: 700;
 }
 
 /* Custom Scrollbars */
@@ -124,21 +145,21 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #0b1120;
 }
 ::-webkit-scrollbar-thumb {
   background: #334155;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
 
-/* Pulse animation */
+/* Pulsing Badge Animation */
 @keyframes pulse-ring {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.05); opacity: 0.4; }
-  100% { transform: scale(0.95); opacity: 0.8; }
+  0% { transform: scale(0.95); opacity: 0.9; }
+  50% { transform: scale(1.08); opacity: 0.4; }
+  100% { transform: scale(0.95); opacity: 0.9; }
 }
 
 .animate-pulse-ring {

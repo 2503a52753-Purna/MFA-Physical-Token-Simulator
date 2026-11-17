@@ -211,3 +211,4 @@ Outputs:
   LambdaFunctionArn:
     Description: 'MFA Lambda Verification Function ARN'
     Value: !GetAtt VerifyOtpFunction.Arn
+

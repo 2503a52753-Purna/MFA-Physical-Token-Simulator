@@ -23,13 +23,13 @@
   - **AWS Lambda**: Node.js 20.x & Python 3.12 verification handlers with RFC 6238 HMAC-SHA1 calculation and $\pm 1$ window drift compensation.
   - **Amazon DynamoDB**: Monotonic step tracking for zero-trust **replay attack mitigation**.
   - **Amazon API Gateway (HTTP API)**: RESTful verification endpoint with CORS enabled for client dashboard integration.
-- **Interactive Web Dashboard**:
+- **Intuitive & Easy Web Dashboard**:
+  - **"How It Works in 3 Simple Steps" Storyboard**: Crystal-clear visual narrative for professors, students, and evaluators.
+  - **⚡ 1-Click Interactive Auto Demo**: Generates OTP on the ESP32, auto-fills login, and verifies on AWS in 2 seconds.
+  - **🛡️ Real-Time Replay Attack Simulation**: Interactive demonstration of zero-trust security blocking token reuse.
+  - **☁️ Permanent AWS Learner Lab Connect**: Triple-layer persistence (`aws-config.json`, `localStorage`, URL query params) with connection health testing.
   - Photorealistic ESP32 hardware emulator with tactile 3D push-button and audio synthesis.
-  - Virtual 115200-baud UART Serial Monitor.
-  - Live MQTT packet stream inspector.
-  - Enterprise MFA login verification terminal.
-  - Interactive RFC 6238 cryptographic calculation inspector.
-  - Live latency telemetry graph (Chart.js).
+  - Deep-dive inspector tabs: Virtual 115200-baud UART Serial Monitor, Live MQTT packet stream, RFC 6238 cryptographic calculation inspector, and Latency Chart (Chart.js).
 - **Zero-Hardware Simulation**: Fully configured for [Wokwi Online Simulator](https://wokwi.com) via `firmware/diagram.json`.
 
 ---
@@ -173,8 +173,26 @@ Validate RFC 6238 mathematical compliance and drift tolerance:
 npm test
 ```
 
-### 3. Deploy to AWS Cloud
-Deploy the AWS IoT Core, Lambda, DynamoDB, and API Gateway infrastructure using the automated CloudFormation script:
+### 3. Deploy to AWS Cloud & AWS Learner Lab
+
+#### Option A: AWS Learner Lab (Permanent 24/7 Connection - Zero IAM Errors)
+In AWS Academy Learner Lab accounts, students cannot create custom IAM roles. We provide dedicated scripts that automatically deploy via the pre-existing `LabRole` and generate a **permanent HTTPS Lambda Function URL** that remains active 24/7 across lab restarts:
+
+**Windows PowerShell**:
+```powershell
+.\aws\deploy-learner-lab.ps1
+```
+
+**Linux / macOS / Git Bash**:
+```bash
+chmod +x aws/deploy-learner-lab.sh
+./aws/deploy-learner-lab.sh
+```
+
+*See the full [AWS Learner Lab Guide](file:///docs/AWS_LEARNER_LAB_GUIDE.md) for step-by-step instructions and web console deployment.*
+
+#### Option B: Standard AWS Account (Commercial / Free Tier)
+Deploy using standard CloudFormation with custom IAM roles:
 
 **PowerShell (Windows)**:
 ```powershell

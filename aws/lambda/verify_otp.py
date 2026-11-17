@@ -122,3 +122,4 @@ def build_response(status_code: int, body_dict: dict) -> dict:
         },
         "body": json.dumps(body_dict),
     }
+

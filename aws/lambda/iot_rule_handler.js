@@ -36,3 +36,4 @@ exports.handler = async (event) => {
 
   return { status: 'RECORDED', item };
 };
+

@@ -35,3 +35,4 @@ aws cloudformation describe-stacks \
     --output table
 
 echo -e "\nDeployment complete! You can now link your dashboard to the API Endpoint.\n"
+

@@ -95,3 +95,4 @@ chmod +x aws/deploy.sh
 2. Click the **AWS Settings** button in the top navigation bar.
 3. Paste your `ApiEndpointUrl` and click **Save & Apply**.
 4. The dashboard will now execute verification directly against your live AWS cloud backend!
+

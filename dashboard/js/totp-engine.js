@@ -122,3 +122,4 @@ class TotpEngine {
 }
 
 window.TotpEngine = TotpEngine;
+

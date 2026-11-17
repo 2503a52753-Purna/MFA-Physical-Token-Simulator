@@ -47,3 +47,4 @@ foreach ($out in $outputs) {
 }
 Write-Host "========================================================`n" -ForegroundColor Green
 Write-Host "Copy the ApiEndpointUrl above into dashboard/js/aws-client.js or use the Settings Modal in the Dashboard!" -ForegroundColor Cyan
+
