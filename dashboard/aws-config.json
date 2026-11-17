@@ -1,8 +1,8 @@
 {
-  "apiEndpoint": "",
+  "apiEndpoint": "https://odxpboh5l5miu5y5wcfxwvt6ie0ifzfd.lambda-url.us-east-1.on.aws/",
   "iotEndpoint": "a1b2c3d4e5f6g7-ats.iot.us-east-1.amazonaws.com",
   "region": "us-east-1",
-  "mode": "auto",
+  "mode": "live",
   "isLearnerLab": true,
-  "description": "AWS Learner Lab Permanent Configuration. Paste your permanent API Gateway or Lambda Function URL here or connect via the dashboard modal."
+  "description": "AWS Learner Lab Permanent Configuration - Verified Live with MfaVerifyOtpFunction"
 }
