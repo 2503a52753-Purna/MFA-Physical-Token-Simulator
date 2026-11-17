@@ -181,6 +181,7 @@ class AwsClient {
             deviceId,
             otp: cleanOtp,
             userId,
+            step: totpEngine ? totpEngine.lastGeneratedStep : undefined,
             action: 'verify'
           })
         });

@@ -127,12 +127,16 @@ exports.handler = async (event) => {
     console.warn('[MFA-LAMBDA] DynamoDB lookup skipped or failed (using env fallback):', dbErr.message);
   }
 
-  // Validate against time window [-1, 0, +1]
+  // Validate against time window [-1, 0, +1] or client-synchronized device step
   let isValid = false;
   let matchedStep = null;
 
-  for (let offset = -DRIFT_WINDOW; offset <= DRIFT_WINDOW; offset++) {
-    const testStep = currentStep + offset;
+  const testSteps = [currentStep, currentStep - 1, currentStep + 1];
+  if (typeof body.step === 'number' && Math.abs(body.step - currentStep) <= 50) {
+    if (!testSteps.includes(body.step)) testSteps.push(body.step);
+  }
+
+  for (const testStep of testSteps) {
     const expectedOtp = generateTotp(deviceSecret, testStep);
 
     if (expectedOtp === cleanOtp) {

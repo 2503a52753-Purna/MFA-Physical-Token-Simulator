@@ -164,8 +164,12 @@ Resources:
             let verified = false;
             let matchedStep = null;
 
-            for (let off = -1; off <= 1; off++) {
-              const testStep = currentStep + off;
+            const testSteps = [currentStep, currentStep - 1, currentStep + 1];
+            if (typeof body.step === 'number' && Math.abs(body.step - currentStep) <= 50) {
+              if (!testSteps.includes(body.step)) testSteps.push(body.step);
+            }
+
+            for (const testStep of testSteps) {
               if (generateTotp(secret, testStep) === cleanOtp) {
                 // Replay attack check
                 if (consumedSteps.has(testStep)) {

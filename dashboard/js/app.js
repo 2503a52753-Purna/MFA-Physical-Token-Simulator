@@ -100,8 +100,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function refreshOtp(isManualTrigger = false) {
     if (isManualTrigger) {
       ui.playClickSound();
-      blinkLed(ledTx, 'led-amber-active', 280);
-      ui.appendSerialLog('[GPIO] Button PIN 4 triggered (FALLING EDGE)', 'warn');
+      blinkLed(ledTx, 'led-amber-active', 300);
+      blinkLed(ledPwr, 'led-green-active', 300);
+      ui.appendSerialLog('[GPIO] Button PIN 4 triggered (FALLING EDGE) -> Fresh OTP requested', 'warn');
+      // Advance step on manual button press so a brand-new, unique 6-digit code is GUARANTEED!
+      totp.advanceStep();
     }
 
     const tokenData = await totp.generateToken();
@@ -109,9 +112,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     aws.stats.generatedCount++;
     if (statGenerated) statGenerated.textContent = aws.stats.generatedCount;
 
-    // Update OLED Canvas
+    // Reset remaining seconds and update OLED
     const remaining = totp.getRemainingSeconds();
     oled.updateOtp(tokenData.token, remaining);
+
+    // Update countdown text & progress bar immediately
+    if (countdownText) countdownText.textContent = `${remaining} seconds remaining`;
+    if (countdownBar) {
+      countdownBar.style.width = '100%';
+      countdownBar.className = 'h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-1000';
+    }
+    if (oledTimerLabel) oledTimerLabel.textContent = `Expires in ${remaining}s`;
+
+    // Automatically fill the new code into the login input box!
+    if (inputOtp) {
+      inputOtp.value = tokenData.token;
+    }
+
+    // Clear any previous error/denied/replay banner so user has a fresh state
+    if (verificationResultBanner && isManualTrigger) {
+      verificationResultBanner.classList.add('hidden');
+    }
 
     // Update Cryptographic Inspector
     updateCryptoInspector(tokenData);
@@ -126,9 +147,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       event: isManualTrigger ? 'BUTTON_PUSHED' : 'WINDOW_CYCLE'
     }, 'TX');
 
-    ui.appendSerialLog(`[CRYPTO] HMAC-SHA1 step=${tokenData.step} -> OTP=${tokenData.token}`, 'crypto');
+    ui.appendSerialLog(`[CRYPTO] HMAC-SHA1 step=${tokenData.step} -> Generated OTP=${tokenData.token}`, 'crypto');
     ui.appendSerialLog(`[AWS-MQTT] Published to mfa/devices/ESP32-MFA-01/otp`, 'mqtt');
     renderMqttStream();
+
+    if (isManualTrigger) {
+      ui.showToast(`⚡ Generated New Code: ${tokenData.token} (Auto-filled into Login)`, 'success');
+    }
   }
 
   /**
@@ -483,7 +508,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Hardware Push Button
   if (btnGenerateOtp) {
-    btnGenerateOtp.addEventListener('click', () => refreshOtp(true));
+    btnGenerateOtp.addEventListener('click', async () => {
+      btnGenerateOtp.classList.add('scale-95');
+      setTimeout(() => btnGenerateOtp.classList.remove('scale-95'), 120);
+      await refreshOtp(true);
+    });
   }
 
   // Auto-fill into input
