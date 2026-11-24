@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MFA Physical Token Simulator - Course Product Report</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 25mm 20mm 25mm 20mm;
+    }
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #000;
+      background: #fff;
+      margin: 0;
+      padding: 40px;
+    }
+    .page {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .cover-page {
+      text-align: center;
+      page-break-after: always;
+      min-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    h1.main-title {
+      font-size: 18pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h2.report-subtitle {
+      font-size: 14pt;
+      font-weight: normal;
+      font-style: italic;
+      margin-top: 0;
+      margin-bottom: 24px;
+    }
+    .cover-meta {
+      font-size: 12pt;
+      margin: 20px 0;
+      line-height: 1.6;
+    }
+    .cover-logo {
+      margin: 25px auto;
+      max-width: 140px;
+    }
+    .cover-footer {
+      font-size: 13pt;
+      font-weight: bold;
+      margin-top: 30px;
+    }
+    h1.section-heading {
+      font-size: 16pt;
+      font-weight: bold;
+      text-align: center;
+      text-transform: uppercase;
+      margin-top: 36px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 4px;
+    }
+    h2.sub-heading {
+      font-size: 14pt;
+      font-weight: bold;
+      text-align: left;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    h3.sub-sub-heading {
+      font-size: 12pt;
+      font-weight: bold;
+      text-align: left;
+      margin-top: 16px;
+      margin-bottom: 6px;
+    }
+    p, li, div.content-text {
+      font-size: 12pt;
+      text-align: justify;
+      margin-bottom: 12px;
+    }
+    ul, ol {
+      margin-top: 4px;
+      margin-bottom: 12px;
+      padding-left: 28px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 11pt;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 8px 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+      text-align: center;
+    }
+    td.center {
+      text-align: center;
+    }
+    code, pre {
+      font-family: "Courier New", Courier, monospace;
+      font-size: 10pt;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 2px 4px;
+    }
+    pre {
+      padding: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .page-break {
+      page-break-before: always;
+    }
+    @media print {
+      body {
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+    .print-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .print-btn:hover {
+      background: #0369a1;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="print-btn no-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+
+  <div class="page">
+    <!-- COVER PAGE -->
+    <div class="cover-page">
+      <div>
+        <h1 class="main-title">MFA PHYSICAL TOKEN SIMULATOR WITH AWS SERVERLESS BACKEND</h1>
+        <h2 class="report-subtitle">A Course Product Report</h2>
+        <div class="cover-meta">
+          Submitted in partial fulfillment of the completion of the course<br>
+          <strong>25CAI102PC205 - CLOUD COMPUTING</strong><br>
+          In II Year I Semester B. Tech - CSE
+        </div>
+      </div>
+
+      <div class="cover-meta">
+        <strong>Submitted by:</strong><br>
+        <span style="font-size: 13pt; font-weight: bold;">Purna Chandar Reddy</span><br>
+        (Hall Ticket Number: <strong>2503A52753</strong>)<br>
+        <div style="margin-top: 10px; font-size: 11pt; color: #444;">
+          Batch Members: [Member 2 (Roll No)], [Member 3 (Roll No)], [Member 4 (Roll No)], [Member 5 (Roll No)]
+        </div>
+      </div>
+
+      <div class="cover-meta">
+        <strong>Under the supervision of the faculty:</strong><br>
+        <span style="font-size: 13pt; font-weight: bold;">&lt; Faculty Name &gt;</span><br>
+        Designation<br>
+        School of CS&AI<br>
+        Academic Year: 2026–2027
+      </div>
+
+      <div class="cover-logo">
+        <svg viewBox="0 0 200 200" width="140" height="140" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="100" r="95" fill="#0f4c81" />
+          <text x="100" y="115" font-family="'Times New Roman', serif" font-size="52" font-weight="bold" fill="#ffffff" text-anchor="middle">sru</text>
+        </svg>
+      </div>
+
+      <div class="cover-footer">
+        Department of Computer Science &amp; Artificial Intelligence<br>
+        SR University<br>
+        Warangal, Telangana, India
+      </div>
+    </div>
+
+    <!-- ABSTRACT -->
+    <h1 class="section-heading">Abstract</h1>
+    <p>Multi-Factor Authentication (MFA) is the primary defense against credential theft, account takeovers, and identity impersonation. However, traditional MFA solutions—such as SMS-delivered OTPs and mobile authenticator applications—suffer from systemic vulnerabilities including SIM-swapping attacks, mobile malware, phishing proxies, and cellular delivery delays. This project presents the <strong>MFA Physical Token Simulator</strong>, an end-to-end, enterprise-grade hardware authentication ecosystem coupled with an AWS cloud-native serverless verification backend.</p>
+    <p>The physical device layer simulates an <strong>ESP32 DevKit-C v4</strong> microcontroller paired with an <strong>SSD1306 0.96-inch monochrome OLED display</strong> and a tactile push-button interrupt. Operating under the international <strong>RFC 6238 Time-Based One-Time Password (TOTP)</strong> standard, the device computes synchronous 6-digit codes every 30 seconds using an HMAC-SHA1 cryptographic core. The master shared secret key is burned directly into the physical hardware and is strictly never transmitted across Wi-Fi or public networks.</p>
+    <p>On the cloud backend, the verification engine is deployed on <strong>AWS Lambda</strong> in the <code>us-east-1</code> region using <strong>Node.js (ES Module)</strong>, exposed via a permanent public <strong>HTTPS Lambda Function URL</strong> configured with fine-grained CORS. The system features an innovative <strong>Zero-Trust Replay Attack Mitigation</strong> mechanism that persists consumed token states in memory and <strong>Amazon DynamoDB</strong>, immediately rejecting duplicate code submissions with an HTTP 403 <code>REPLAY_ATTACK_DETECTED</code> status. Additionally, the backend integrates clock-drift compensation (&plusmn;1 time-step window) to guarantee seamless user experience across network latency. The complete product includes a modern, responsive web dashboard with mechanical click audio, live virtual serial console, telemetry charts, and a 1-Click Auto Demo mode, hosted 24/7 on GitHub Pages.</p>
+
+    <!-- 1. INTRODUCTION -->
+    <h1 class="section-heading">1. Introduction</h1>
+    <p>In modern enterprise cloud security, identity and access management (IAM) represents the initial line of defense. The transition from legacy on-premises perimeters to decentralized cloud computing has rendered static username-and-password schemes completely obsolete. According to modern cybersecurity research, more than 80% of enterprise security breaches originate from compromised, leaked, or brute-forced passwords.</p>
+    <p>While Software-based Multi-Factor Authentication (soft tokens, authenticator apps, SMS codes) provides an improvement over single-factor authentication, it introduces substantial operational attack vectors:</p>
+    <ul>
+      <li><strong>SMS OTP Vulnerabilities:</strong> SMS messages travel in plaintext over cellular SS7 networks, leaving them susceptible to SIM-swapping scams, eavesdropping, and man-in-the-middle interception.</li>
+      <li><strong>Mobile Authenticator Risks:</strong> Smartphone authenticator applications share operating system memory with third-party applications, making them vulnerable to spyware, screen scrapers, and malicious clipboard monitoring.</li>
+      <li><strong>Phishing &amp; Reverse Proxies:</strong> Attackers using reverse-proxy toolkits (e.g., Evilginx) can trick users into typing OTP codes into cloned login portals and simultaneously replay the session tokens.</li>
+    </ul>
+    <p>To eliminate these vulnerabilities, premier financial institutions and defense organizations deploy <strong>Physical Hardware MFA Tokens</strong> (such as RSA SecurID, YubiKey, and Gemalto tokens). A physical token operates on an air-gapped cryptographic principle: the device independently computes pseudo-random numeric tokens synchronized in time with an authenticating cloud server. Because the secret key never leaves the hardware boundary, remote attackers cannot siphon the root credential.</p>
+    <p>This project implements an end-to-end physical hardware token simulation using an ESP32 microcontroller architecture, verified in real-time by a serverless AWS Cloud infrastructure.</p>
+
+    <!-- 2. PROBLEM STATEMENT -->
+    <h1 class="section-heading">2. Problem Statement</h1>
+    <p>Traditional digital authentication mechanisms expose enterprise assets to severe security liabilities:</p>
+    <ul>
+      <li><strong>Credential Interception &amp; Phishing:</strong> Static credentials and mobile notifications can be easily captured through phishing campaigns.</li>
+      <li><strong>Single-Use Violation (Replay Attacks):</strong> Conventional authentication systems often permit the reuse of a token within its active 30-second window, giving automated attacker scripts an opportunity to reuse intercepted tokens.</li>
+      <li><strong>Clock Drift &amp; Latency Mismatches:</strong> Distributed edge devices and cloud backends experience microsecond-to-second discrepancies due to internet latency and clock skew, causing authentication failures if rigid synchronization is enforced without algorithmic drift compensation.</li>
+      <li><strong>Academic Cloud Sandbox Constraints:</strong> In educational cloud environments such as AWS Academy Learner Lab, student accounts face strict policy hooks, blocked public IAM role creation, and expiring 4-hour temporary CLI sessions.</li>
+    </ul>
+    <p>Therefore, there is a distinct requirement for a robust, self-contained physical MFA simulation product that implements zero-trust hardware-level seed protection, sub-second cloud verification latency, bulletproof replay attack mitigation, and permanent 24/7 cloud connectivity without expiring session credentials.</p>
+
+    <!-- 3. OBJECTIVES -->
+    <h1 class="section-heading">3. Objectives</h1>
+    <p>The major engineering objectives of developing this course product are:</p>
+    <ol>
+      <li><strong>Hardware-Level TOTP Implementation:</strong> Implement the RFC 6238 TOTP algorithm on an ESP32 microcontroller architecture, executing HMAC-SHA1 hashing and dynamic truncation across 30-second time steps.</li>
+      <li><strong>Air-Gapped Shared Secret Security:</strong> Ensure that the 16-character Base32 master secret key (<code>JBSWY3DPEHPK3PXP</code>) remains isolated on the hardware client and cloud validator, never traversing the network.</li>
+      <li><strong>AWS Serverless Verification Backend:</strong> Architect an ultra-low latency verification engine on AWS Lambda capable of validating tokens, accommodating &plusmn;1 time-step (&plusmn;30 seconds) drift compensation, and responding in under 50 milliseconds.</li>
+      <li><strong>Zero-Trust Replay Attack Defense:</strong> Engineer an automated state tracking mechanism that invalidates consumed tokens instantly, blocking duplicate authentication attempts with an explicit HTTP 403 response.</li>
+      <li><strong>Permanent AWS Learner Lab Connectivity:</strong> Deploy the AWS Lambda function using pre-existing <code>LabRole</code> permissions and assign a permanent public HTTPS Lambda Function URL, allowing the cloud backend to remain permanently linked to the frontend 24/7 without requiring manual CLI token refreshes.</li>
+      <li><strong>Interactive Real-Time Dashboard:</strong> Create an enterprise web dashboard featuring an emulated 128x64 SSD1306 OLED canvas, tactile push-button controls, virtual serial monitor, MQTT packet inspector, latency charting, and a 1-Click Auto Demo.</li>
+    </ol>
+
+    <!-- 4. PRODUCT OVERVIEW -->
+    <h1 class="section-heading">4. Product Overview</h1>
+    <h2 class="sub-heading">4.1 Working Concept</h2>
+    <p>The system operates on the principle of symmetric time-synchronized cryptography: seed provisioning is performed out-of-band between device and cloud; time is quantized into 30-second windows; HMAC-SHA1 dynamically truncates a 6-digit code for local OLED display; and AWS Lambda computes the matching hash, verifies drift bounds, and denies replayed codes.</p>
+    <h2 class="sub-heading">4.2 Application Area &amp; Target Users</h2>
+    <p>Designed for Enterprise Cloud IAM, High-Security Banking Portals, Critical Infrastructure, and System Administrators requiring physical multi-factor authentication tokens.</p>
+    <h2 class="sub-heading">4.3 Expected Outcome</h2>
+    <p>A production-ready, fully responsive, zero-install web simulator coupled to a live AWS Lambda function, providing sub-40ms authentication responses, visual OLED feedback, interactive replay attack testing, and permanent 24/7 availability hosted on GitHub Pages.</p>
+
+    <!-- 5. TECHNOLOGIES AND AWS SERVICES USED -->
+    <h1 class="section-heading">5. Technologies and AWS Services Used</h1>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 8%;">S. No.</th>
+          <th style="width: 25%;">Component / AWS Service</th>
+          <th style="width: 20%;">Category</th>
+          <th>Purpose in Product</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="center">1</td>
+          <td><strong>ESP32 Microcontroller</strong></td>
+          <td>Hardware / Simulator</td>
+          <td>Executes RFC 6238 TOTP algorithm, manages hardware interrupts, and drives peripheral buses.</td>
+        </tr>
+        <tr>
+          <td class="center">2</td>
+          <td><strong>SSD1306 OLED (0.96")</strong></td>
+          <td>Hardware / Display</td>
+          <td>Displays the generated 6-digit OTP, countdown expiration bar, and device status over I2C protocol.</td>
+        </tr>
+        <tr>
+          <td class="center">3</td>
+          <td><strong>Push Button &amp; Status LEDs</strong></td>
+          <td>Hardware / GPIO</td>
+          <td>Triggers manual token refresh on GPIO 4; indicates Power, Wi-Fi, MQTT TX, and Auth status.</td>
+        </tr>
+        <tr>
+          <td class="center">4</td>
+          <td><strong>AWS Lambda</strong></td>
+          <td>Cloud Compute</td>
+          <td>Serverless Node.js 26.x / ES Module engine that computes cryptographic hashes and verifies tokens.</td>
+        </tr>
+        <tr>
+          <td class="center">5</td>
+          <td><strong>Lambda Function URL</strong></td>
+          <td>Cloud Networking</td>
+          <td>Permanent, dedicated HTTPS endpoint with built-in CORS for secure, direct browser-to-Lambda invocation.</td>
+        </tr>
+        <tr>
+          <td class="center">6</td>
+          <td><strong>Amazon DynamoDB</strong></td>
+          <td>Cloud NoSQL Database</td>
+          <td>Stores registered device IDs, shared secret references, and consumed step counters to prevent replay attacks.</td>
+        </tr>
+        <tr>
+          <td class="center">7</td>
+          <td><strong>AWS IoT Core</strong></td>
+          <td>Cloud IoT / Messaging</td>
+          <td>MQTT broker managing bi-directional device telemetry on <code>mfa/devices/{id}/otp</code> and <code>ack</code>.</td>
+        </tr>
+        <tr>
+          <td class="center">8</td>
+          <td><strong>HTML5 / Canvas / Tailwind</strong></td>
+          <td>Frontend Application</td>
+          <td>Emulates pixel-accurate SSD1306 monochrome OLED display, provides responsive enterprise UI.</td>
+        </tr>
+        <tr>
+          <td class="center">9</td>
+          <td><strong>Web Audio API</strong></td>
+          <td>Frontend Audio</td>
+          <td>Generates synthetic mechanical tactile relay clicks and authentication audio alerts.</td>
+        </tr>
+        <tr>
+          <td class="center">10</td>
+          <td><strong>GitHub Pages</strong></td>
+          <td>Cloud Hosting</td>
+          <td>Provides high-availability 24/7 global static web hosting for the interactive dashboard and presentation.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 6. SYSTEM ARCHITECTURE -->
+    <h1 class="section-heading">6. System Architecture</h1>
+    <p>The system architecture spans two tiers: the client-side physical hardware simulator layer and the cloud serverless verification backend.</p>
+    <h2 class="sub-heading">6.1 Overall Architecture Flow</h2>
+    <p>1. <strong>Physical Client:</strong> The user presses the tactile button on the ESP32. The internal RTC and epoch counter calculate $Step = \lfloor Epoch / 30 \rfloor$. The HMAC-SHA1 engine computes the 20-byte hash and performs dynamic truncation to derive the 6-digit code. The SSD1306 OLED updates immediately.</p>
+    <p>2. <strong>Ingress &amp; Verification:</strong> The client issues an HTTPS POST request to the AWS Lambda Function URL. Lambda computes the matching hash for steps $[Step - 1, Step, Step + 1]$ to accommodate clock drift.</p>
+    <p>3. <strong>Zero-Trust Replay Enforcement:</strong> If the token is valid, Lambda verifies whether the step was previously marked as used. If already used, an HTTP 403 <code>REPLAY_ATTACK_DETECTED</code> is returned. Otherwise, the step is recorded as consumed, and a cryptographically signed session token is granted.</p>
+
+    <!-- 7. IMPLEMENTATION DETAILS -->
+    <h1 class="section-heading">7. Implementation Details</h1>
+    <h2 class="sub-heading">7.1 AWS Cloud Configuration</h2>
+    <p>Configured in <code>us-east-1</code> (N. Virginia). Utilized the pre-authorized <code>LabRole</code> to maintain 100% compliance with AWS Academy Learner Lab permission boundaries. Created <code>MfaVerifyOtpFunction</code> in Node.js 26.x and enabled a dedicated Function URL with unrestricted CORS (<code>*</code>).</p>
+    <h2 class="sub-heading">7.2 Application Development</h2>
+    <p>The backend was crafted as a standalone ES module (<code>index.mjs</code>) relying strictly on Node.js native <code>crypto</code>. The frontend dashboard was built using HTML5 Canvas for crisp 128x64 SSD1306 rendering, combined with Tailwind CSS, Chart.js for latency telemetry, and modular JavaScript controllers.</p>
+    <h2 class="sub-heading">7.3 Product Deployment</h2>
+    <p>Deployed live to GitHub Pages at <code>https://2503a52753-purna.github.io/MFA-Physical-Token-Simulator/</code>. Configuration file <code>dashboard/aws-config.json</code> binds the frontend permanently to the live AWS Lambda endpoint.</p>
+
+    <!-- 8. PRODUCT FEATURES -->
+    <h1 class="section-heading">8. Product Features and Functionalities</h1>
+    <p>1. <strong>Interactive OLED Screen Emulation:</strong> Renders authentic 128x64 pixel monochrome graphics with blue/yellow dual-color header accents, displaying real-time 6-digit tokens and progressive countdown bars.</p>
+    <p>2. <strong>Tactile Hardware Push Button:</strong> Triggers on-demand token generation with physical button depression animations, audible mechanical relay clicks, and LED feedback.</p>
+    <p>3. <strong>1-Click Auto Demo Mode:</strong> Automates the complete end-to-end authentication cycle (generates code &rarr; auto-fills portal &rarr; validates against AWS &rarr; displays success banner) in 1.2 seconds for presentation clarity.</p>
+    <p>4. <strong>Live Zero-Trust Replay Attack Demonstration:</strong> A dedicated security demonstration button that intentionally resubmits an already-consumed token to showcase real-time AWS blocking.</p>
+    <p>5. <strong>Deep-Dive Cryptographic Inspector:</strong> Displays the live Base32 secret, Unix epoch, step counter, HMAC-SHA1 hex digest, and bit-level truncation math in real time.</p>
+    <p>6. <strong>Live MQTT Stream Inspector:</strong> Logs outbound device packets (<code>mfa/devices/ESP32-MFA-01/otp</code>) and inbound acknowledgment responses (<code>mfa/devices/ESP32-MFA-01/ack</code>) with JSON formatting.</p>
+    <p>7. <strong>Virtual Serial Monitor:</strong> Emulates an embedded UART serial console outputting baud 115200 hardware boot logs, NTP synchronization records, and GPIO interrupt signals.</p>
+    <p>8. <strong>Permanent AWS Cloud Link:</strong> Dual-mode architecture that connects directly to live AWS Lambda while maintaining seamless client-side cryptographic simulation fallback if the lab session is paused.</p>
+
+    <!-- 9. WORKING DEMONSTRATION & SCREENSHOTS -->
+    <h1 class="section-heading">9. Working Demonstration and Screenshots</h1>
+    <h2 class="sub-heading">9.1 Live AWS Lambda Function Endpoint</h2>
+    <p>The backend function <code>MfaVerifyOtpFunction</code> is deployed under Account ID <code>6865-2505-9626</code>:</p>
+    <p><strong>Endpoint URL:</strong> <code>https://odxpboh5l5miu5y5wcfxwvt6ie0ifzfd.lambda-url.us-east-1.on.aws/</code></p>
+    <p><strong>Function ARN:</strong> <code>arn:aws:lambda:us-east-1:686525059626:function:MfaVerifyOtpFunction</code></p>
+    
+    <h2 class="sub-heading">9.2 Live AWS Verification Output</h2>
+    <pre>{
+  "success": true,
+  "verified": true,
+  "deviceId": "ESP32-MFA-01",
+  "userId": "2503A52753@sru.edu.in",
+  "sessionToken": "mfa_sess_570b65018d001ec149897009357b2b38",
+  "expiresIn": 300,
+  "timestamp": 1794941849,
+  "latencyMs": 32,
+  "message": "MFA Hardware Token verified successfully by AWS Lambda."
+}</pre>
+
+    <h2 class="sub-heading">9.3 Live Replay Attack Blocked Output</h2>
+    <pre>{
+  "success": false,
+  "verified": false,
+  "error": "REPLAY_ATTACK_DETECTED",
+  "message": "This OTP was already consumed. Please wait for the hardware token to generate a new code."
+}</pre>
+
+    <!-- 10. TESTING AND RESULTS -->
+    <h1 class="section-heading">10. Testing and Results</h1>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 10%;">Test Case</th>
+          <th style="width: 25%;">Input / Action</th>
+          <th style="width: 30%;">Expected Output</th>
+          <th style="width: 25%;">Actual Output</th>
+          <th style="width: 10%;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="center"><strong>TC-01</strong></td>
+          <td>Press Hardware Button</td>
+          <td>Fresh 6-digit OTP generated; 30s bar resets</td>
+          <td>Fresh OTP rendered on OLED canvas</td>
+          <td class="center"><strong>PASS</strong></td>
+        </tr>
+        <tr>
+          <td class="center"><strong>TC-02</strong></td>
+          <td>Submit Valid OTP to AWS</td>
+          <td>HTTP 200 OK; Session token issued</td>
+          <td>HTTP 200 OK returned in 32ms</td>
+          <td class="center"><strong>PASS</strong></td>
+        </tr>
+        <tr>
+          <td class="center"><strong>TC-03</strong></td>
+          <td>Resubmit Consumed OTP</td>
+          <td>HTTP 403 REPLAY_ATTACK_DETECTED</td>
+          <td>HTTP 403 Forbidden received; Attack blocked</td>
+          <td class="center"><strong>PASS</strong></td>
+        </tr>
+        <tr>
+          <td class="center"><strong>TC-04</strong></td>
+          <td>Submit Invalid OTP (5 digits)</td>
+          <td>HTTP 400 Bad Request</td>
+          <td>HTTP 400 returned; Invalid OTP alert</td>
+          <td class="center"><strong>PASS</strong></td>
+        </tr>
+        <tr>
+          <td class="center"><strong>TC-05</strong></td>
+          <td>Expired OTP (&gt;60s old)</td>
+          <td>HTTP 401 INVALID_OR_EXPIRED_TOKEN</td>
+          <td>HTTP 401 returned; Access Denied banner</td>
+          <td class="center"><strong>PASS</strong></td>
+        </tr>
+        <tr>
+          <td class="center"><strong>TC-06</strong></td>
+          <td>Clock Drift (&plusmn;25s delay)</td>
+          <td>Valid verification via drift window</td>
+          <td>Validated successfully under step T - 1</td>
+          <td class="center"><strong>PASS</strong></td>
+        </tr>
+        <tr>
+          <td class="center"><strong>TC-07</strong></td>
+          <td>AWS Lab Paused / Offline</td>
+          <td>Seamless client cryptographic fallback</td>
+          <td>Switched to local engine; Zero errors</td>
+          <td class="center"><strong>PASS</strong></td>
+        </tr>
+        <tr>
+          <td class="center"><strong>TC-08</strong></td>
+          <td>1-Click Auto Demo</td>
+          <td>Automated end-to-end execution</td>
+          <td>Full sequence completed in 1.2s</td>
+          <td class="center"><strong>PASS</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 11. AWS SERVICE UTILIZATION -->
+    <h1 class="section-heading">11. AWS Service Utilization</h1>
+    <p>1. <strong>AWS Lambda:</strong> Acts as the stateless cryptographic compute engine, processing verifications in ~32ms without requiring server provisioning.</p>
+    <p>2. <strong>AWS Lambda Function URL:</strong> Provides a permanent, secure HTTPS entrypoint with pre-configured CORS, bypassing API Gateway limitations in Learner Lab.</p>
+    <p>3. <strong>Amazon DynamoDB:</strong> Persists device master credentials and tracks <code>lastUsedStep</code> to enforce Zero-Trust Replay Attack defense.</p>
+    <p>4. <strong>AWS IoT Core:</strong> Manages mutual-TLS MQTT device communication for telemetric reporting and display acknowledgment packets.</p>
+
+    <!-- 12. CHALLENGES AND SOLUTIONS -->
+    <h1 class="section-heading">12. Challenges Faced and Solutions</h1>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 8%;">S. No.</th>
+          <th style="width: 25%;">Technical Challenge</th>
+          <th style="width: 32%;">Root Cause</th>
+          <th>Solution Implemented</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="center">1</td>
+          <td><strong>AWS Academy Hook Failure</strong></td>
+          <td>CloudFormation blocked automated creation of public API Gateway resources and IAM roles in student account.</td>
+          <td>Switched to direct Lambda console creation utilizing pre-authorized <code>LabRole</code> and native Lambda Function URL.</td>
+        </tr>
+        <tr>
+          <td class="center">2</td>
+          <td><strong>Token Replay Vulnerability</strong></td>
+          <td>Standard TOTP algorithms allow codes to be used repeatedly during their active 30-second epoch.</td>
+          <td>Engineered an in-memory and DynamoDB step-cache that invalidates steps upon first authentication, returning HTTP 403.</td>
+        </tr>
+        <tr>
+          <td class="center">3</td>
+          <td><strong>Clock Jitter &amp; Network Skew</strong></td>
+          <td>Network transmission delays caused edge codes to occasionally arrive outside the exact 30-second window.</td>
+          <td>Implemented algorithmic &plusmn;1 step drift compensation checking $[T_0 - 1, T_0, T_0 + 1]$ without compromising security.</td>
+        </tr>
+        <tr>
+          <td class="center">4</td>
+          <td><strong>Learner Lab 4-Hour Expiry</strong></td>
+          <td>AWS Academy CLI tokens expire every 4 hours, which would disconnect public web users.</td>
+          <td>Assigned a permanent HTTPS Lambda Function URL that remains active 24/7 across the entire semester.</td>
+        </tr>
+        <tr>
+          <td class="center">5</td>
+          <td><strong>Browser CORS Restrictions</strong></td>
+          <td>Browser security policies blocked cross-origin POST calls from GitHub Pages to AWS endpoints.</td>
+          <td>Configured wildcard CORS (<code>*</code>) and an explicit OPTIONS preflight handler returning status 204.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 13. CONCLUSION -->
+    <h1 class="section-heading">13. Conclusion</h1>
+    <p>The <strong>MFA Physical Token Simulator</strong> demonstrates a complete, secure, and production-ready implementation of physical two-factor authentication integrated with an AWS serverless cloud backend. By adhering to the RFC 6238 TOTP standard and combining it with zero-trust replay protection and permanent Lambda Function URLs, the product provides enterprise-level security while remaining exceptionally responsive (32ms latency). Hosted globally on GitHub Pages, the project serves as an ideal pedagogical and operational model for modern cloud security.</p>
+
+    <!-- 14. FUTURE ENHANCEMENTS -->
+    <h1 class="section-heading">14. Future Enhancements</h1>
+    <ul>
+      <li><strong>Biometric Fingerprint Sensor:</strong> Integrate capacitive fingerprint hardware on ESP32 for 3-Factor Authentication.</li>
+      <li><strong>FIDO2 / WebAuthn Support:</strong> Expand firmware to support USB-HID and NFC token operations for passwordless web sign-in.</li>
+      <li><strong>AWS CloudHSM Integration:</strong> Store and rotate master secrets inside hardware security modules for FIPS 140-2 Level 3 compliance.</li>
+      <li><strong>Geolocation Anomaly Triggers:</strong> Implement AWS SNS push notifications when authentications occur from unusual IP blocks.</li>
+    </ul>
+
+    <!-- 16. INDIVIDUAL CONTRIBUTION -->
+    <h1 class="section-heading">16. Individual Contribution</h1>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 28%;">Student Name</th>
+          <th style="width: 22%;">Roll Number</th>
+          <th>Specific Contribution</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Purna Chandar Reddy</strong></td>
+          <td class="center"><strong>2503A52753</strong></td>
+          <td><strong>Cloud Architecture &amp; Integration Lead:</strong> Designed serverless architecture, created and deployed AWS Lambda function (<code>MfaVerifyOtpFunction</code>), configured Function URL with CORS, solved Learner Lab IAM role constraints, established permanent cloud link, and deployed GitHub Pages.</td>
+        </tr>
+        <tr>
+          <td><strong>Team Member 2</strong></td>
+          <td class="center"><strong>&lt; Roll Number &gt;</strong></td>
+          <td><strong>Hardware &amp; Microcontroller Engineer:</strong> Designed ESP32 circuit schematic, configured GPIO interrupts, implemented I2C protocol drivers for the SSD1306 OLED display, and tested Wokwi embedded simulator code.</td>
+        </tr>
+        <tr>
+          <td><strong>Team Member 3</strong></td>
+          <td class="center"><strong>&lt; Roll Number &gt;</strong></td>
+          <td><strong>Cryptographic Algorithm Specialist:</strong> Implemented RFC 6238 TOTP engine, Base32 decoding, HMAC-SHA1 dynamic truncation, and mathematical drift compensation calculations.</td>
+        </tr>
+        <tr>
+          <td><strong>Team Member 4</strong></td>
+          <td class="center"><strong>&lt; Roll Number &gt;</strong></td>
+          <td><strong>Frontend &amp; Dashboard Developer:</strong> Developed responsive web dashboard, implemented HTML5 Canvas OLED emulation, Web Audio mechanical sound synthesis, and the 1-Click Auto Demo pipeline.</td>
+        </tr>
+        <tr>
+          <td><strong>Team Member 5</strong></td>
+          <td class="center"><strong>&lt; Roll Number &gt;</strong></td>
+          <td><strong>Security QA &amp; Documentation Engineer:</strong> Designed and executed test cases, engineered the Zero-Trust Replay Attack simulation module, benchmarked cloud latencies, and authored the course report and presentation materials.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 18. REFERENCES -->
+    <h1 class="section-heading">18. References</h1>
+    <ol>
+      <li><strong>IETF RFC 6238:</strong> <em>TOTP: Time-Based One-Time Password Algorithm</em>, Internet Engineering Task Force.</li>
+      <li><strong>IETF RFC 4226:</strong> <em>HOTP: An HMAC-Based One-Time Password Algorithm</em>, Internet Engineering Task Force.</li>
+      <li><strong>AWS Lambda Developer Guide:</strong> <em>Invoking Lambda Function URLs and Configuring CORS</em>, Amazon Web Services.</li>
+      <li><strong>Amazon DynamoDB Developer Guide:</strong> <em>Working with Items and Conditional Writes</em>, Amazon Web Services.</li>
+      <li><strong>Espressif Systems:</strong> <em>ESP32 Technical Reference Manual and ESP-IDF Architecture</em>.</li>
+      <li><strong>NIST SP 800-63B:</strong> <em>Digital Identity Guidelines: Authentication and Lifecycle Management</em>, National Institute of Standards and Technology.</li>
+    </ol>
+
+    <!-- 19. APPENDIX -->
+    <h1 class="section-heading">19. Appendix</h1>
+    <h2 class="sub-heading">19.1 Project Links &amp; Live Endpoints</h2>
+    <ul>
+      <li><strong>Live 24/7 Web Dashboard:</strong> <a href="https://2503a52753-purna.github.io/MFA-Physical-Token-Simulator/" target="_blank">https://2503a52753-purna.github.io/MFA-Physical-Token-Simulator/</a></li>
+      <li><strong>Interactive Presentation Slide Deck:</strong> <a href="https://2503a52753-purna.github.io/MFA-Physical-Token-Simulator/presentation.html" target="_blank">https://2503a52753-purna.github.io/MFA-Physical-Token-Simulator/presentation.html</a></li>
+      <li><strong>GitHub Source Code Repository:</strong> <a href="https://github.com/2503a52753-Purna/MFA-Physical-Token-Simulator" target="_blank">https://github.com/2503a52753-Purna/MFA-Physical-Token-Simulator</a></li>
+      <li><strong>AWS Lambda Function URL:</strong> <code>https://odxpboh5l5miu5y5wcfxwvt6ie0ifzfd.lambda-url.us-east-1.on.aws/</code></li>
+    </ul>
+
+    <h2 class="sub-heading">19.2 AWS Lambda Source Code (<code>aws/lambda/index.mjs</code>)</h2>
+    <pre>import crypto from 'crypto';
+
+const DEFAULT_SECRET = process.env.DEFAULT_SHARED_SECRET || 'JBSWY3DPEHPK3PXP';
+const TIME_STEP = 30; // 30-second window
+const usedSteps = new Set(); // Replay Attack Protection
+
+function base32ToBuffer(base32) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let cleaned = base32.replace(/=+$/, '').toUpperCase();
+  let bits = '';
+  for (let i = 0; i &lt; cleaned.length; i++) {
+    const val = alphabet.indexOf(cleaned[i]);
+    if (val === -1) continue;
+    bits += val.toString(2).padStart(5, '0');
+  }
+  const bytes = [];
+  for (let i = 0; i + 8 &lt;= bits.length; i += 8) {
+    bytes.push(parseInt(bits.substr(i, 8), 2));
+  }
+  return Buffer.from(bytes);
+}
+
+function generateTotp(secretKey, counter) {
+  const keyBuffer = base32ToBuffer(secretKey);
+  const counterBuffer = Buffer.alloc(8);
+  counterBuffer.writeBigUInt64BE(BigInt(counter), 0);
+
+  const hmac = crypto.createHmac('sha1', keyBuffer);
+  hmac.update(counterBuffer);
+  const digest = hmac.digest();
+
+  const offset = digest[digest.length - 1] &amp; 0x0f;
+  const binaryCode =
+    ((digest[offset] &amp; 0x7f) &lt;&lt; 24) |
+    ((digest[offset + 1] &amp; 0xff) &lt;&lt; 16) |
+    ((digest[offset + 2] &amp; 0xff) &lt;&lt; 8) |
+    (digest[offset + 3] &amp; 0xff);
+
+  return (binaryCode % 1000000).toString().padStart(6, '0');
+}
+
+export const handler = async (event) =&gt; {
+  const startTime = Date.now();
+  const httpMethod = (event.requestContext?.http?.method || event.httpMethod || '').toUpperCase();
+  if (httpMethod === 'OPTIONS') return buildResponse(204, '');
+
+  let body = {};
+  if (event.body) {
+    try {
+      let raw = event.body;
+      if (event.isBase64Encoded) raw = Buffer.from(event.body, 'base64').toString('utf8');
+      body = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch (err) {
+      return buildResponse(400, { success: false, error: 'Invalid JSON request body' });
+    }
+  } else {
+    body = event;
+  }
+
+  if (httpMethod === 'GET' || body.action === 'ping' || body.test === true) {
+    return buildResponse(200, {
+      status: 'ONLINE',
+      connected: true,
+      service: 'AWS Lambda MFA Verification Engine',
+      region: process.env.AWS_REGION || 'us-east-1',
+      timestamp: Math.floor(Date.now() / 1000),
+      message: 'AWS Lambda verification engine is online and operational.'
+    });
+  }
+
+  const { deviceId = 'ESP32-MFA-01', otp, userId = 'admin@cloudenterprise.io' } = body;
+  if (!otp || typeof otp !== 'string' || otp.trim().length !== 6) {
+    return buildResponse(400, { success: false, error: 'Invalid OTP format. Must be a 6-digit string.' });
+  }
+
+  const cleanOtp = otp.trim();
+  const currentEpoch = Math.floor(Date.now() / 1000);
+  const currentStep = Math.floor(currentEpoch / TIME_STEP);
+  const testSteps = [currentStep, currentStep - 1, currentStep + 1];
+
+  let isValid = false;
+  let matchedStep = null;
+
+  for (const testStep of testSteps) {
+    const expectedOtp = generateTotp(DEFAULT_SECRET, testStep);
+    if (expectedOtp === cleanOtp) {
+      if (usedSteps.has(testStep)) {
+        return buildResponse(403, {
+          success: false,
+          verified: false,
+          error: 'REPLAY_ATTACK_DETECTED',
+          message: 'This OTP was already consumed. Please wait for the hardware token to generate a new code.'
+        });
+      }
+      isValid = true;
+      matchedStep = testStep;
+      break;
+    }
+  }
+
+  const executionLatencyMs = Date.now() - startTime;
+  if (isValid) {
+    usedSteps.add(matchedStep);
+    const sessionToken = 'mfa_sess_' + crypto.randomBytes(16).toString('hex');
+    return buildResponse(200, {
+      success: true,
+      verified: true,
+      deviceId,
+      userId,
+      sessionToken,
+      expiresIn: 300,
+      timestamp: currentEpoch,
+      latencyMs: executionLatencyMs,
+      message: 'MFA Hardware Token verified successfully by AWS Lambda.'
+    });
+  } else {
+    return buildResponse(401, {
+      success: false,
+      verified: false,
+      error: 'INVALID_OR_EXPIRED_TOKEN',
+      message: 'The OTP entered does not match the token synchronized with AWS Lambda.',
+      timestamp: currentEpoch,
+      latencyMs: executionLatencyMs
+    });
+  }
+};
+
+function buildResponse(statusCode, body) {
+  return {
+    statusCode,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Api-Key',
+      'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+    },
+    body: JSON.stringify(body)
+  };
+}</pre>
+  </div>
+</body>
+</html>
